@@ -10,6 +10,11 @@ import (
 	"time"
 )
 
+var (
+	PkgInfos  []gopacket.Packet
+	StartTime time.Time
+)
+
 type PkgRow struct {
 	No       int
 	Time     time.Time
@@ -43,15 +48,17 @@ func GetPkg(device string, list binding.StringList) {
 	// Use the handle as a packet source to process all packets
 	packetSource := gopacket.NewPacketSource(handle, handle.LinkType())
 	for packet := range packetSource.Packets() {
-		//packet:=<-packetSource.Packets()
-		if packet != nil {
-			p := anlysePacket(packet)
-			p.No = No
-			No++
-			fmt.Println(gopacket.LayerString(packet.TransportLayer()))
-
-			list.Append(p.formatePkgListInfo())
+		if No == 1 {
+			//StartTime=
 		}
+		//packet:=<-packetSource.Packets()
+		p := anlysePacket(packet)
+		p.No = No
+		PkgInfos = append(PkgInfos, packet)
+		No++
+		list.Append(p.formatePkgListInfo())
+		fmt.Println(packet.LinkLayer().LayerContents())
+
 	}
 }
 
@@ -82,16 +89,44 @@ func anlysePacket(p gopacket.Packet) PkgRow {
 	pkgrow := PkgRow{Time: p.Metadata().Timestamp,
 		Length: p.Metadata().Length,
 	}
-	if p.NetworkLayer()!=nil{  //网际层
+	if p.NetworkLayer() != nil { //网际层
 		if p.NetworkLayer().NetworkFlow().Src() != nilEndpoint {
 			pkgrow.Source = p.NetworkLayer().NetworkFlow().Src().String()
 		}
-		if p.NetworkLayer().NetworkFlow().Dst()!=nilEndpoint {
+		if p.NetworkLayer().NetworkFlow().Dst() != nilEndpoint {
 			pkgrow.Dest = p.NetworkLayer().NetworkFlow().Dst().String()
 		}
 	}
-	if p.TransportLayer() != nil {   //传输层
+	if p.TransportLayer() != nil { //传输层
 		if p.TransportLayer().TransportFlow() != nilFlow {
+			//s:=gopacket.LayerString(p.TransportLayer())
+			//ipLayer := p.Layer(layers.LayerTypeIPv4)
+			//if ipLayer != nil {
+			//	fmt.Println("IPv4 layer detected.")
+			//	ip, _ := ipLayer.(*layers.IPv4)
+			//
+			//	// IP layer variables:
+			//	// Version (Either 4 or 6)
+			//	// IHL (IP Header Length in 32-bit words)
+			//	// TOS, Length, Id, Flags, FragOffset, TTL, Protocol (TCP?),
+			//	// Checksum, SrcIP, DstIP
+			//	fmt.Println(ip.Checksum)
+			//	fmt.Printf("From %s to %s\n", ip.SrcIP, ip.DstIP)
+			//	fmt.Println("Protocol: ", ip.Protocol)
+			//}
+			//tcpLayer := p.Layer(layers.LayerTypeTCP)
+			//if tcpLayer != nil {
+			//	fmt.Println("TCP layer detected.")
+			//	tcp, _ := tcpLayer.(*layers.TCP)
+			//	// TCP layer variables:
+			//	// SrcPort, DstPort, Seq, Ack, DataOffset, Window, Checksum, Urgent
+			//	// Bool flags: FIN, SYN, RST, PSH, ACK, URG, ECE, CWR, NS
+			//	fmt.Println(tcp.Options)
+			//	fmt.Printf("From port %d to %d\n", tcp.SrcPort, tcp.DstPort)
+			//	fmt.Println("Sequence number: ", tcp.Seq)
+			//	fmt.Println()
+			//}
+
 			pkgrow.Protocol = p.TransportLayer().TransportFlow().EndpointType().String()
 			pkgrow.Info = p.TransportLayer().TransportFlow().String()
 		}
