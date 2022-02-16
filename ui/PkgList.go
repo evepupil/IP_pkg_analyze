@@ -9,7 +9,7 @@ import (
 	//"time"
 )
 
-func loadPkgList(pkg binding.String) (*fyne2.Container, binding.StringList) {
+func loadPkgList() (*fyne2.Container, binding.StringList) {
 	pkgText := []string{
 		"No.     ", "Time                          ", "Source              ", "Dst                      ",
 		"Protocol   ", "Length     ", "Info                                 ",
@@ -21,7 +21,6 @@ func loadPkgList(pkg binding.String) (*fyne2.Container, binding.StringList) {
 		}))
 	}
 	PkgStringList := binding.NewStringList()
-
 	PkgList := widget.NewListWithData(PkgStringList,
 		func() fyne2.CanvasObject {
 			return widget.NewLabel("")
@@ -33,10 +32,11 @@ func loadPkgList(pkg binding.String) (*fyne2.Container, binding.StringList) {
 			l.SetText(s)
 		})
 	PkgList.OnSelected = func(id widget.ListItemID) {
-		LayersData[""] = []string{"www"}
+		NewLayersData(id+1, ip.PkgInfos[id])
 		LayersWidget.Refresh()
-		NewLayersData(id, ip.PkgInfos[id])
-		pkg.Set(PkgBytes2String(ip.PkgInfos[id].Data()))
+		NewPkgInfoData(ip.PkgInfos[id])
+		//pkg.Set(PkgBytes2String(ip.PkgInfos[id].Data()))
+
 	}
 	s := widget.NewSeparator()
 	PkgListContainer := container.NewBorder(pkgTextContainer, nil, nil, s, PkgList)

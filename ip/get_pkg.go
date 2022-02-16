@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"fyne.io/fyne/v2/data/binding"
 	"github.com/google/gopacket"
+	"github.com/google/gopacket/layers"
 	"github.com/google/gopacket/pcap"
 	"log"
 	"strconv"
@@ -57,7 +58,8 @@ func GetPkg(device string, list binding.StringList) {
 		PkgInfos = append(PkgInfos, packet)
 		No++
 		list.Append(p.formatePkgListInfo())
-		fmt.Println(packet.LinkLayer().LayerContents())
+		fmt.Println()
+		//fmt.Println(int(packet.NetworkLayer().LayerContents()[2])*256+int(packet.NetworkLayer().LayerContents()[3]))
 
 	}
 }
@@ -96,6 +98,9 @@ func anlysePacket(p gopacket.Packet) PkgRow {
 		if p.NetworkLayer().NetworkFlow().Dst() != nilEndpoint {
 			pkgrow.Dest = p.NetworkLayer().NetworkFlow().Dst().String()
 		}
+		if p.NetworkLayer().NetworkFlow() != nilFlow {
+			pkgrow.Protocol = p.NetworkLayer().NetworkFlow().EndpointType().String()
+		}
 	}
 	if p.TransportLayer() != nil { //传输层
 		if p.TransportLayer().TransportFlow() != nilFlow {
@@ -126,9 +131,17 @@ func anlysePacket(p gopacket.Packet) PkgRow {
 			//	fmt.Println("Sequence number: ", tcp.Seq)
 			//	fmt.Println()
 			//}
-
 			pkgrow.Protocol = p.TransportLayer().TransportFlow().EndpointType().String()
 			pkgrow.Info = p.TransportLayer().TransportFlow().String()
+		}
+		if p.ApplicationLayer() != nil {
+			switch p.ApplicationLayer().LayerType() {
+			case layers.LayerTypeTLS:
+				pkgrow.Protocol = "TLS"
+			case layers.LayerTypeDNS:
+				pkgrow.Protocol = "DNS"
+			}
+
 		}
 	}
 	return pkgrow

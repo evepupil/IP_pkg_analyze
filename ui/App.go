@@ -22,8 +22,8 @@ func Run() {
 	//p:=PkgRow{Source: "src",Dest: "dst"}
 	b := ip.Get_if_list()
 	Layers := loadLayers()
-	PkgInfo, pkg := loadPkgInfo()
-	PkgList, list := loadPkgList(pkg)
+	PkgInfo := loadPkgInfo()
+	PkgList, list := loadPkgList()
 	PkgListContainer := container.NewWithoutLayout(PkgList)
 	//PkgListContainer.Resize(fyne2.NewSize(1600,280))
 	//PkgInfoContainer:=container.NewBorder(PkgListContainer,nil,nil,nil,PkgInfo)
